@@ -1,0 +1,8 @@
+{
+  "name": "PDFProTools",
+  "description": "A free online PDF toolkit powered by AI, offering features like merging, splitting, compressing, converting PDFs, and AI-driven tools like text extraction, summarization, and translation without registration or watermarks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
