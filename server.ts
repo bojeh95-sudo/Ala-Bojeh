@@ -1427,16 +1427,7 @@ Return ONLY the raw JSON array. Do not wrap it in markdown or backticks. If you 
     }
   });
 
-  // Setup Vite Dev Server reference if in development
-  let viteDevServer: any = null;
-  if (process.env.NODE_ENV !== "production") {
-    const { createServer: createViteServer } = await import('vite');
-    viteDevServer = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    (global as any).viteDevServer = viteDevServer;
-  }
+
 
   // SEO page handler for navigation requests (Production only)
   if (process.env.NODE_ENV === 'production') {
@@ -1526,10 +1517,8 @@ ${hreflangTags}
     });
   }
 
-  // Vite middleware for development or static assets serving
-  if (process.env.NODE_ENV !== "production") {
-    app.use(viteDevServer.middlewares);
-  } else {
+  // Static assets serving in production
+  if (process.env.NODE_ENV === "production") {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*splat', (req, res) => {
