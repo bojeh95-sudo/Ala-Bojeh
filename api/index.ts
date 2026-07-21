@@ -1,3 +1,4 @@
+import './polyfills';
 import express from 'express';
 import path from 'path';
 import { promises as fs } from 'node:fs';
