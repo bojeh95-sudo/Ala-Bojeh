@@ -16,7 +16,7 @@ const { ArabicShaper } = reshaper;
 
 const { encryptPDF, PDFPermission } = pkg;
 
-const requireFn = createRequire(path.join(process.cwd(), 'server.js'));
+const requireFn = createRequire(import.meta.url);
 const rawPdfParse = requireFn('pdf-parse');
 
 function detectArabicOrientation(text: string): 'reversed' | 'logical' | 'unknown' {
