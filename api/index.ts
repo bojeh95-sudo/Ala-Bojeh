@@ -16,8 +16,7 @@ const { ArabicShaper } = reshaper;
 
 const { encryptPDF, PDFPermission } = pkg;
 
-const requireFn = createRequire(import.meta.url);
-const rawPdfParse = requireFn('pdf-parse');
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 function detectArabicOrientation(text: string): 'reversed' | 'logical' | 'unknown' {
   const words = text.split(/\s+/).map(w => w.trim()).filter(w => /[\u0600-\u06FF]/.test(w));
@@ -206,14 +205,22 @@ function processExcelCSV(csvText: string): string {
 }
 
 async function extractTextFromPdfBuffer(buffer: Buffer): Promise<string> {
-  const { PDFParse } = rawPdfParse as any;
-  if (!PDFParse) {
-    throw new Error('PDFParse constructor not found in pdf-parse module.');
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(buffer),
+    useSystemFonts: true,
+    disableFontFace: true,
+  });
+  const pdf = await loadingTask.promise;
+  let fullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item: any) => item.str)
+      .join(' ');
+    fullText += pageText + '\n';
   }
-  const parser = new PDFParse({ data: buffer });
-  const textResult = await parser.getText();
-  const rawText = textResult?.text || '';
-  const fixedText = fixArabicTextOrder(rawText);
+  const fixedText = fixArabicTextOrder(fullText);
   return cleanPageDecorations(fixedText);
 }
 
@@ -492,7 +499,7 @@ Ensure it is fully customized to the document's content and written in a highly 
     }
   });
 
-  // Real PDF to Word converter using pdf-parse and docx
+  // Real PDF to Word converter using pdfjs-dist and docx
   app.post('/api/pdf/pdf2word', async (req, res) => {
     try {
       const { fileData } = req.body;
@@ -503,12 +510,12 @@ Ensure it is fully customized to the document's content and written in a highly 
       // Convert base64 data to a Buffer
       const buffer = Buffer.from(fileData, 'base64');
 
-      // Parse PDF using pdf-parse
+      // Parse PDF using pdfjs-dist
       let extractedText = '';
       try {
         extractedText = await extractTextFromPdfBuffer(buffer);
       } catch (parseErr: any) {
-        console.error('pdf-parse failed:', parseErr);
+        console.error('pdf extraction failed:', parseErr);
         return res.status(400).json({ error: 'Failed to read PDF file content: ' + parseErr.message });
       }
       if (!extractedText.trim()) {
